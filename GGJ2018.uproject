@@ -3,5 +3,10 @@
 	"EngineAssociation": "4.18",
 	"Category": "",
 	"Description": "",
-	"Plugins": []
+	"Plugins": [
+		{
+			"Name": "FMODStudio",
+			"Enabled": true
+		}
+	]
 }
