@@ -5,7 +5,7 @@
 	"Description": "",
 	"Plugins": [
 		{
-			"Name": "FMODStudio",
+			"Name": "ApexDestruction",
 			"Enabled": true
 		}
 	]
