@@ -5,6 +5,8 @@
 #include "CoreMinimal.h"
 #include "Runtime/Engine/Classes/Engine/TriggerBox.h"
 #include "CPP_CupCharacter.h"
+#include "CPP_MusicManager.h"
+#include "CPP_SpotterAnimInstance.h"
 #include "GameFramework/Actor.h"
 #include "Runtime/Engine/Classes/Components/SpotLightComponent.h"
 #include "CPP_Spotter.generated.h"
@@ -31,7 +33,9 @@ protected:
 	virtual void BeginPlay() override;
 
 	void SubscribeTriggers();
+	UFUNCTION(BlueprintCallable)
 	void ActorBeginOverlap(AActor* OverlappedActor, AActor* OtherActor);
+	UFUNCTION(BlueprintCallable)
 	void ActorEndOverlap(AActor* OverlappedActor, AActor* OtherActor);
 
 	UFUNCTION(BlueprintCallable)
@@ -53,8 +57,7 @@ protected:
 		return false;
 	}
 
-	UFUNCTION(BlueprintCallable, Category = CustomNodes,  meta = (ExpandEnumAsExecs = Branches))
-	void SpottingLogicSplit(TriggerLogicSplitEnum& Branches);
+	TriggerLogicSplitEnum SpottingLogicSplit();
 	UFUNCTION(BlueprintCallable)
 	bool IsPlayerVisible();
 
@@ -65,10 +68,22 @@ protected:
 	USkeletalMeshComponent* skeletalMesh = nullptr;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
-	UStaticMeshComponent* regularTarget = nullptr;
+	USceneComponent* defaultRoot = nullptr;
+
+	UFUNCTION(BlueprintCallable)
+	void ScaleEyesToTarget();
+
+	UFUNCTION(BlueprintCallable)
+	void SpotPlayer();
+
+	UFUNCTION(BlueprintCallable)
+	void GiveUp();
+
+	UFUNCTION(BlueprintCallable)
+	float CheckTime(float DeltaTime);
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
-	USceneComponent* defaultRoot = nullptr;
+	float canBeAnnoyedThreshold = 2.f;
 
 public:	
 	// Called every frame
@@ -104,4 +119,6 @@ public:
 	FLinearColor dangerColor = FLinearColor::Red;
 	UPROPERTY(BlueprintReadWrite)
 	bool spotting = false;
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, meta = (MakeEditWidget = "EyeTarget"))
+	FVector eyeTarget;
 };

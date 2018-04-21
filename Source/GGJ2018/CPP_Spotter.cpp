@@ -15,10 +15,14 @@ ACPP_Spotter::ACPP_Spotter()
 	RootComponent = defaultRoot;
 	skeletalMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("SkeletalMesh"));
 	skeletalMesh->SetupAttachment(RootComponent);
+	triggerZones = TArray<ATriggerBox*>();
+	triggerZones = TArray<ATriggerBox*>();
+	triggerZones = TArray<ATriggerBox*>();
 	spotLight = CreateDefaultSubobject<USpotLightComponent>(TEXT("SpotLight"));
-	spotLight->SetupAttachment(skeletalMesh);
-	regularTarget = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("RegularTarget"));
-	regularTarget->SetupAttachment(RootComponent);
+
+	spotLight->AttachToComponent(skeletalMesh,FAttachmentTransformRules::SnapToTargetNotIncludingScale,FName("LeftEyeSocket"));
+
+	eyeTarget = FVector(0.f, 0.f, 0.f);
 }
 
 // Called when the game starts or when spawned
@@ -32,19 +36,30 @@ void ACPP_Spotter::BeginPlay()
 void ACPP_Spotter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+	ScaleEyesToTarget();
 
+	float spotPercent = CheckTime(DeltaTime);
+
+	CheckPlayerLoss();
+
+	spotLight->SetLightColor(UKismetMathLibrary::LinearColorLerp(safeColor, dangerColor, spotPercent));
+
+	if (AnyTriggersActive())
+	{
+		timeSinceSpot += DeltaTime;
+	}
 }
 
 void ACPP_Spotter::SubscribeTriggers()
 {
-	for (ATriggerBox* box : triggerZones)
-	{
-		if (box)
-		{
-			box->OnActorBeginOverlap.AddUniqueDynamic(this,&ACPP_Spotter::ActorBeginOverlap);
-			box->OnActorEndOverlap.AddUniqueDynamic(this,&ACPP_Spotter::ActorEndOverlap);
-		}
-	}
+	//for (ATriggerBox* box : triggerZones)
+	//{
+	//	if (box)
+	//	{
+	//		box->OnActorBeginOverlap.AddUniqueDynamic(this,&ACPP_Spotter::ActorBeginOverlap);
+	//		box->OnActorEndOverlap.AddUniqueDynamic(this,&ACPP_Spotter::ActorEndOverlap);
+	//	}
+	//}
 }
 
 void ACPP_Spotter::ActorBeginOverlap(AActor* OverlappedActor, AActor* OtherActor)
@@ -97,25 +112,25 @@ void ACPP_Spotter::CheckPlayerLoss()
 	}
 }
 
-void ACPP_Spotter::SpottingLogicSplit(TriggerLogicSplitEnum& Branches)
+TriggerLogicSplitEnum ACPP_Spotter::SpottingLogicSplit()
 {
+	TriggerLogicSplitEnum path;
 	if (AnyTriggersActive())
 	{
 		if (IsPlayerVisible() && IsPlayerNoticeable())
 		{
-			Branches = TriggerLogicSplitEnum::TriggersActiveAndNoticeable;
+			path = TriggerLogicSplitEnum::TriggersActiveAndNoticeable;
 		}
 		else
 		{
-			Branches = TriggerLogicSplitEnum::TriggersActiveAndHidden;
+			path = TriggerLogicSplitEnum::TriggersActiveAndHidden;
 		}
 	}
 	else
 	{
-		Branches = TriggerLogicSplitEnum::TriggersInactive;
+		path = TriggerLogicSplitEnum::TriggersInactive;
 	}
-
-
+	return path;
 }
 
 bool ACPP_Spotter::IsPlayerVisible()
@@ -158,4 +173,82 @@ bool ACPP_Spotter::IsPlayerVisible()
 	
 
 	return hitRays > 1;
+}
+
+void ACPP_Spotter::ScaleEyesToTarget()
+{
+	FVector targetLocation = FVector::ZeroVector;
+	if (AnyTriggersActive() && currentSpotTime > 1.f)
+	{
+		targetLocation = cupCharacter->GetActorLocation();
+	}
+	else
+	{
+		targetLocation = GetActorTransform().InverseTransformPosition(eyeTarget);
+	}
+	FRotator towardsPlayer  = UKismetMathLibrary::FindLookAtRotation( spotLight->GetComponentLocation(), targetLocation);
+	spotLight->SetWorldRotation(towardsPlayer);
+}
+
+void ACPP_Spotter::SpotPlayer()
+{
+	TArray<AActor*> managers;
+	ACPP_MusicManager* musicManager;
+	UGameplayStatics::GetAllActorsOfClass(this,ACPP_MusicManager::StaticClass(),managers);
+
+	if (managers.Num() > 0){
+
+		musicManager = dynamic_cast<ACPP_MusicManager*>(managers[0]);
+		if (musicManager != nullptr)
+		{
+			musicManager->TriggerBeenSpotted();
+		}
+	}
+	if (huhSounds.Num() > 0)
+	{
+		int index = UKismetMathLibrary::RandomInteger(huhSounds.Num());
+		UGameplayStatics::PlaySoundAtLocation(this, huhSounds[index], GetActorLocation());
+	}
+
+	UCPP_SpotterAnimInstance* spotterAnim = dynamic_cast<UCPP_SpotterAnimInstance*>(skeletalMesh->GetAnimInstance());
+	spotterAnim->isAlert = true;
+
+	timeSinceSpot = 0.f;
+}
+
+void ACPP_Spotter::GiveUp()
+{
+	if (canBeAnnoyed && giveUpSounds.Num() > 0)
+	{
+		int index = UKismetMathLibrary::RandomInteger(giveUpSounds.Num());
+		UGameplayStatics::PlaySoundAtLocation(this,giveUpSounds[index],GetActorLocation());
+	}
+
+	UCPP_SpotterAnimInstance* spotterAnim = dynamic_cast<UCPP_SpotterAnimInstance*>(skeletalMesh->GetAnimInstance());
+	spotterAnim->isAlert = false;
+}
+
+float ACPP_Spotter::CheckTime(float DeltaTime)
+{
+	float currentSpotPercent = FMath::Clamp(currentSpotTime / lossTime,0.f,1.f);
+
+	if (SpottingLogicSplit() == TriggerLogicSplitEnum::TriggersActiveAndNoticeable)
+	{
+		if (currentSpotTime < timeToNoticePlayer && currentSpotTime + DeltaTime >= timeToNoticePlayer)
+		{
+			SpotPlayer();
+		}
+		currentSpotTime += DeltaTime;
+		canBeAnnoyed = currentSpotTime > canBeAnnoyedThreshold;
+	}
+	else
+	{
+		float max = FMath::Max(currentSpotTime - (DeltaTime / reduceSpeed),0.f);
+		if (currentSpotTime > 0.f && max <= 0.f)
+		{
+			GiveUp();
+		}
+		currentSpotTime = max;
+	}
+	return FMath::Clamp(currentSpotPercent,0.f,1.f);
 }

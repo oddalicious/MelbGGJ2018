@@ -10,7 +10,6 @@ ACPP_CupCharacter::ACPP_CupCharacter()
 {
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
-
 }
 
 // Called when the game starts or when spawned
@@ -31,7 +30,6 @@ void ACPP_CupCharacter::Tick(float DeltaTime)
 void ACPP_CupCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
-
 }
 
 bool ACPP_CupCharacter::IsAnimating() const
