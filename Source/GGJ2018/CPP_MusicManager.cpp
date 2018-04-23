@@ -20,17 +20,17 @@ void ACPP_MusicManager::BeginPlay()
 	Super::BeginPlay();
 	LoseSpot();
 
-	if (spotSound == nullptr)
+	if (!spotSound)
 	{
 		if (GEngine)
 			GEngine->AddOnScreenDebugMessage(5,2.f,FColor::Red,FString("MusicManager::SpotSound is Missing"));
 	}
-	if (spottedMusic == nullptr)
+	if (!spottedMusic)
 	{
 		if (GEngine)
 			GEngine->AddOnScreenDebugMessage(5, 2.f, FColor::Red, FString("MusicManager::SpottedMusic is Missing"));
 	}
-	if (regularMusic == nullptr)
+	if (!regularMusic)
 	{
 		if (GEngine)
 			GEngine->AddOnScreenDebugMessage(5, 2.f, FColor::Red, FString("MusicManager::RegularMusic is Missing"));

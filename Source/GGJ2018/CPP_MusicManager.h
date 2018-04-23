@@ -1,5 +1,9 @@
 // Fill out your copyright notice in the Description page of Project Settings.
-
+/*
+* @Author: Tim Patullock
+* @Date: 21/3/2018
+* Description: Controls what music plays at what time (spotted or stealthed), also controls the 'Spotted' sound.
+*/
 #pragma once
 
 #include "CoreMinimal.h"
