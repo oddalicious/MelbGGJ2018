@@ -90,11 +90,13 @@ void ACPP_Spotter::CheckPlayerLoss()
 	{
 		if (cupCharacter)
 		{
+			//Player loses
 			cupCharacter->ShowLoseWidget();
 		}
 	}
 }
 
+//A Holdover from Blueprints with multi-ended macros, didn't seem worth removing right now.
 TriggerLogicSplitEnum ACPP_Spotter::SpottingLogicSplit()
 {
 	TriggerLogicSplitEnum path;
@@ -177,8 +179,9 @@ void ACPP_Spotter::SpotPlayer()
 {
 	TArray<AActor*> managers;
 	ACPP_MusicManager* musicManager;
-	UGameplayStatics::GetAllActorsOfClass(this,ACPP_MusicManager::StaticClass(),managers);
 
+	// Get the MusicManager and tell it the spotter has noticed the player
+	UGameplayStatics::GetAllActorsOfClass(this,ACPP_MusicManager::StaticClass(),managers);
 	if (managers.Num() > 0){
 
 		musicManager = dynamic_cast<ACPP_MusicManager*>(managers[0]);
@@ -203,14 +206,14 @@ void ACPP_Spotter::GiveUp()
 {
 	TArray<AActor*> managers;
 	ACPP_MusicManager* musicManager;
-	UGameplayStatics::GetAllActorsOfClass(this, ACPP_MusicManager::StaticClass(), managers);
 
 	if (canBeAnnoyed && giveUpSounds.Num() > 0)
 	{
 		int index = UKismetMathLibrary::RandomInteger(giveUpSounds.Num());
 		UGameplayStatics::PlaySoundAtLocation(this,giveUpSounds[index],GetActorLocation());
 	}
-
+	// Get the MusicManager and tell it the spotter has lost the player
+	UGameplayStatics::GetAllActorsOfClass(this, ACPP_MusicManager::StaticClass(), managers);
 	if (managers.Num() > 0) {
 
 		musicManager = dynamic_cast<ACPP_MusicManager*>(managers[0]);
@@ -223,11 +226,14 @@ void ACPP_Spotter::GiveUp()
 	spotterAnim->isAlert = false;
 }
 
+//Used partially for calculating loss and partially for a light that should illuminate the player when spotted, the return value is used to calculate the red value of the 'spot color'
 float ACPP_Spotter::CheckTime(float DeltaTime)
 {
 	float currentSpotPercent = FMath::Clamp(currentSpotTime / lossTime,0.f,1.f);
 
-	if (SpottingLogicSplit() == TriggerLogicSplitEnum::TriggersActiveAndNoticeable)
+	TriggerLogicSplitEnum currentState = SpottingLogicSplit();
+
+	if (currentState == TriggerLogicSplitEnum::TriggersActiveAndNoticeable)
 	{
 		if (currentSpotTime < timeToNoticePlayer && currentSpotTime + DeltaTime >= timeToNoticePlayer)
 		{

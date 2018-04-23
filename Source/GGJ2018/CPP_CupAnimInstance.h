@@ -1,5 +1,9 @@
 // Fill out your copyright notice in the Description page of Project Settings.
-
+/*
+* @Author: Tim Patullock
+* @Date: 21/3/2018
+* Description: This provides a C++ base for the other classes to interact with easily.
+*/
 #pragma once
 
 #include "CoreMinimal.h"

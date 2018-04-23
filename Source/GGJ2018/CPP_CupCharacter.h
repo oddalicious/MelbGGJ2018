@@ -1,5 +1,9 @@
 // Fill out your copyright notice in the Description page of Project Settings.
-
+/*
+* @Author: Tim Patullock
+* @Date: 21/3/2018
+* Description: Provides a c++ base for the main character (CupCharacter or Cuppy), this is a partial c++ implentation so that I can practice CPP/BP cross-functionality. 
+*/
 #pragma once
 
 #include "CoreMinimal.h"

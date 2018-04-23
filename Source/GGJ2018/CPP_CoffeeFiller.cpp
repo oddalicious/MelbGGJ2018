@@ -73,7 +73,10 @@ void ACPP_CoffeeFiller::BeginPlay()
 }
 
 
-// Called every frame
+/*
+* Tick is structured this way so that it allows the player to set down before properly 'activating', instead of locking them in place
+	where they might be awkwardly positioned away from the point
+*/
 void ACPP_CoffeeFiller::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
@@ -100,16 +103,7 @@ void ACPP_CoffeeFiller::Tick(float DeltaTime)
 
 }
 
-void ACPP_CoffeeFiller::PerformStage2()
-{
-	preparing = false;
-	if (fillSound)
-		UGameplayStatics::PlaySound2D(this,fillSound);
-	isFilling = true;
-
-	GetWorldTimerManager().SetTimer(delayHandle, this, &ACPP_CoffeeFiller::FinishStages, fillSound->Duration);
-}
-
+//Froth the coffee
 void ACPP_CoffeeFiller::PerformStage1()
 {
 	preparing = true;
@@ -119,6 +113,18 @@ void ACPP_CoffeeFiller::PerformStage1()
 		UGameplayStatics::PlaySoundAtLocation(this,prepareSound, GetActorLocation());
 }
 
+//Setup pouring the coffee
+void ACPP_CoffeeFiller::PerformStage2()
+{
+	preparing = false;
+	if (fillSound)
+		UGameplayStatics::PlaySound2D(this, fillSound);
+	isFilling = true;
+
+	GetWorldTimerManager().SetTimer(delayHandle, this, &ACPP_CoffeeFiller::FinishStages, fillSound->Duration);
+}
+
+//Pour the coffee
 void ACPP_CoffeeFiller::PerformFill(float DeltaTime)
 {
 	fillTime += DeltaTime;
@@ -130,7 +136,7 @@ void ACPP_CoffeeFiller::PerformFill(float DeltaTime)
 	coffeeCylinder->SetWorldScale3D(dimensions);
 }
 
-
+// Set each light as 'done' as the coffee froths
 void ACPP_CoffeeFiller::FillLights(float DeltaTime)
 {
 	if (!preparing)
@@ -160,7 +166,7 @@ bool ACPP_CoffeeFiller::CupReady() const
 	FVector cupLocation;
 	FVector actorLocation;
 
-	if (cupCharacter == nullptr)
+	if (!cupCharacter)
 	{
 		return false;
 	}
@@ -193,7 +199,7 @@ void ACPP_CoffeeFiller::FinishStages()
 		coffeeCylinder->SetVisibility(false);
 	if (winPoint && winPoint->GetRootComponent())
 		winPoint->GetRootComponent()->SetActive(true);
-	else if (winPoint == nullptr)
+	else if (!winPoint)
 	{
 		if (GEngine)
 		{
