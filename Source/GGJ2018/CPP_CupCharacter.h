@@ -33,16 +33,30 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
-	UPROPERTY(BlueprintReadWrite)
-	bool isRotating = false;
-
 	UFUNCTION(BlueprintPure)
 	bool IsAnimating() const;
+
+	UFUNCTION(BlueprintPure)
+	bool IsNoticeable() const;
+
+	UFUNCTION(BlueprintCallable)
+	void Fill(float DeltaTime, float Length);
+
+	UFUNCTION(BlueprintCallable)
+	void ShowWinWidget();
+
+	void ShowLoseWidget();
 
 	UPROPERTY(BlueprintReadWrite)
 	bool isMoving = false;
 
-	UFUNCTION(BlueprintCallable)
-	void ShowLoseWidget();
+	UPROPERTY(BlueprintReadWrite)
+	float fillAmount = 0.f;
+
+	UPROPERTY(BlueprintReadWrite)
+	bool canMove = true;
+
+	UPROPERTY(BlueprintReadWrite)
+	bool isRotating = false;
 	
 };

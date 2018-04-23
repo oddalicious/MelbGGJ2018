@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "Runtime/Engine/Classes/Components/AudioComponent.h"
 #include "CPP_MusicManager.generated.h"
 
 UCLASS()
@@ -19,11 +20,25 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
+	float timeSinceLastScare = 0.f;
+	int spotCount = 0;
+
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
 	void TriggerBeenSpotted();
 	
-	
+	void LoseSpot();
+	void SpotPlayer();
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	USoundBase* regularMusic;
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	USoundBase* spottedMusic;
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	USoundBase* spotSound;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	UAudioComponent* audio;
 };

@@ -48,14 +48,39 @@ void ACPP_CupCharacter::ShowLoseWidget()
 	{
 		loseGameWidget->SetVisibility(ESlateVisibility::Visible);
 		loseGameWidget->AddToViewport();
-		APlayerController * controller = Cast<APlayerController>(GEngine->GetFirstLocalPlayerController(GetWorld()));
+
+		APlayerController * controller = UGameplayStatics::GetPlayerController(GetWorld(), 0);
 		if (controller != nullptr)
 		{
 			UWidgetBlueprintLibrary::SetInputMode_UIOnly(controller, loseGameWidget, false);
 			controller->bShowMouseCursor = true;
+			UGameplayStatics::SetGamePaused(this, true);
 		}
 		
-		UGameplayStatics::SetGamePaused(this, true);
+		
 	}
 }
 
+void ACPP_CupCharacter::Fill(float DeltaTime, float Length)
+{
+	fillAmount = FMath::Clamp(fillAmount + (DeltaTime / Length),0.f,1.f);
+}
+
+bool ACPP_CupCharacter::IsNoticeable() const
+{
+	return isMoving || IsAnimating() || isRotating;
+}
+
+void ACPP_CupCharacter::ShowWinWidget()
+{
+	winGameWidget->SetVisibility(ESlateVisibility::Visible);
+	winGameWidget->AddToViewport();
+	
+	APlayerController* controller = UGameplayStatics::GetPlayerController(GetWorld(),0);
+	if (controller != nullptr)
+	{
+		UWidgetBlueprintLibrary::SetInputMode_UIOnly(controller, winGameWidget, false);
+		controller->bShowMouseCursor = true;
+		UGameplayStatics::SetGamePaused(this, true);
+	}
+}

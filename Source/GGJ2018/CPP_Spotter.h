@@ -1,5 +1,11 @@
 // Fill out your copyright notice in the Description page of Project Settings.
-
+/*
+* @Author: Tim Patullock
+* @Date: 21/3/2018
+* Description: Spotters are the 'human' characters which the Cup must avoid, they respond to the player when they walk within a 'visible area' and are considered moving.
+*				The spotter will draw three line-traces to the character, and if at least two connect, this is considered 'seeing' the player, which will drive up their suspicion until the a threshold where the player loses.
+*				if the player stops moving, this suspicion meter will slowly decrease.
+*/
 #pragma once
 
 #include "CoreMinimal.h"

@@ -15,9 +15,6 @@ ACPP_Spotter::ACPP_Spotter()
 	RootComponent = defaultRoot;
 	skeletalMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("SkeletalMesh"));
 	skeletalMesh->SetupAttachment(RootComponent);
-	triggerZones = TArray<ATriggerBox*>();
-	triggerZones = TArray<ATriggerBox*>();
-	triggerZones = TArray<ATriggerBox*>();
 	spotLight = CreateDefaultSubobject<USpotLightComponent>(TEXT("SpotLight"));
 
 	spotLight->AttachToComponent(skeletalMesh,FAttachmentTransformRules::SnapToTargetNotIncludingScale,FName("LeftEyeSocket"));
@@ -52,6 +49,7 @@ void ACPP_Spotter::Tick(float DeltaTime)
 
 void ACPP_Spotter::SubscribeTriggers()
 {
+	// Disabled since the blueprint doesn't recognize the newly-created C++ event subscriptions, apparently it's not uncommon: https://answers.unrealengine.com/questions/502064/onbeginoverlap-from-c-not-working.html
 	//for (ATriggerBox* box : triggerZones)
 	//{
 	//	if (box)
@@ -69,35 +67,20 @@ void ACPP_Spotter::ActorBeginOverlap(AActor* OverlappedActor, AActor* OtherActor
 	{
 		cupCharacter = cup;	
 		activeTriggers++;
-
-		FString triggerText = "Trigger Connected: " + activeTriggers;
-
-		if (GEngine)
-		{
-			GEngine->AddOnScreenDebugMessage(0, 1.f, FColor::Cyan, triggerText);
-		}
 	}
 }
 
 void ACPP_Spotter::ActorEndOverlap(AActor* OverlappedActor, AActor* OtherActor)
 {
 	ACPP_CupCharacter* cup = dynamic_cast<ACPP_CupCharacter*>(OtherActor);
-	if (!cup)
+	if (cup)
 	{
-		return;
-	}
-
-	cupCharacter = cup;
-	activeTriggers = FMath::Max(activeTriggers - 1, 0);
-	if (activeTriggers == 0)
-	{
-		cupCharacter = nullptr;
-	}	
-	FString triggerText = "Trigger Disconnected: " + activeTriggers;
-
-	if (GEngine)
-	{
-		GEngine->AddOnScreenDebugMessage(0,1.f,FColor::Orange, triggerText);
+		cupCharacter = cup;
+		activeTriggers = FMath::Max(activeTriggers - 1, 0);
+		if (activeTriggers == 0)
+		{
+			cupCharacter = nullptr;
+		}	
 	}
 }
 
@@ -105,7 +88,7 @@ void ACPP_Spotter::CheckPlayerLoss()
 {
 	if (currentSpotTime >= lossTime)
 	{
-		if (cupCharacter != nullptr)
+		if (cupCharacter)
 		{
 			cupCharacter->ShowLoseWidget();
 		}
@@ -218,12 +201,24 @@ void ACPP_Spotter::SpotPlayer()
 
 void ACPP_Spotter::GiveUp()
 {
+	TArray<AActor*> managers;
+	ACPP_MusicManager* musicManager;
+	UGameplayStatics::GetAllActorsOfClass(this, ACPP_MusicManager::StaticClass(), managers);
+
 	if (canBeAnnoyed && giveUpSounds.Num() > 0)
 	{
 		int index = UKismetMathLibrary::RandomInteger(giveUpSounds.Num());
 		UGameplayStatics::PlaySoundAtLocation(this,giveUpSounds[index],GetActorLocation());
 	}
 
+	if (managers.Num() > 0) {
+
+		musicManager = dynamic_cast<ACPP_MusicManager*>(managers[0]);
+		if (musicManager != nullptr)
+		{
+			musicManager->LoseSpot();
+		}
+	}
 	UCPP_SpotterAnimInstance* spotterAnim = dynamic_cast<UCPP_SpotterAnimInstance*>(skeletalMesh->GetAnimInstance());
 	spotterAnim->isAlert = false;
 }
